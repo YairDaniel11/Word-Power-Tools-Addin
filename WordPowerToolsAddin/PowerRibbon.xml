@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<customUI xmlns="http://schemas.microsoft.com/office/2009/07/customui" onLoad="Ribbon_Load">
+  <ribbon>
+    <tabs>
+      <tab id="tabPowerTools" label="OpenXML PowerTools">
+        <group id="grpActions" label="פעולות מתקדמות">
+          <button id="btnMerge" label="מיזוג מסמכים" size="large" onAction="OnMergeClicked" imageMso="MergeDocuments" />
+          <button id="btnReplace" label="חיפוש והחלפה XML" size="large" onAction="OnReplaceClicked" imageMso="FindDialog" />
+          <button id="btnAcceptRevisions" label="אישור מעקב שינויים" size="large" onAction="OnAcceptRevisionsClicked" imageMso="ReviewAcceptAllChangesInDocument" />
+          <button id="btnSimplify" label="ניקוי ופישוט קוד" size="large" onAction="OnSimplifyClicked" imageMso="ClearAllFormatting" />
+          <button id="btnExtractText" label="חילוץ טקסט נקי" size="large" onAction="OnExtractTextClicked" imageMso="ExportTextFile" />
+        </group>
+      </tab>
+    </tabs>
+  </ribbon>
+</customUI>
