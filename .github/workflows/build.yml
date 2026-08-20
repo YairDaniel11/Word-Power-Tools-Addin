@@ -42,6 +42,20 @@ jobs:
           throw "Microsoft.Office.Tools.Word.v4.0.Utilities.dll was not found under $installPath."
         }
         $referenceAssembliesPath = $referenceAssembly.Directory.FullName
+        $requiredAssemblies = @(
+          "Microsoft.Office.Tools.dll"
+          "Microsoft.Office.Tools.Common.dll"
+          "Microsoft.Office.Tools.Common.v4.0.Utilities.dll"
+          "Microsoft.Office.Tools.v4.0.Framework.dll"
+          "Microsoft.Office.Tools.Word.dll"
+          "Microsoft.Office.Tools.Word.v4.0.Utilities.dll"
+        )
+        foreach ($assembly in $requiredAssemblies) {
+          if (-not (Test-Path (Join-Path $referenceAssembliesPath $assembly))) {
+            throw "$assembly was not found in $referenceAssembliesPath."
+          }
+        }
+        Write-Host "VSTO reference assemblies: $referenceAssembliesPath"
 
         "VSTO_TOOLS_PATH=$vsToolsPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
         "VS_VERSION=$vsVersion" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
