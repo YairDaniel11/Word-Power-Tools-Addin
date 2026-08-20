@@ -54,7 +54,7 @@ jobs:
     - name: Build VSTO Project
       run: |
         $ErrorActionPreference = "Stop"
-        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:normal "/flp:LogFile=msbuild.log;Verbosity=diagnostic"
+        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /p:ReferencePath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:normal "/flp:LogFile=msbuild.log;Verbosity=diagnostic"
         if ($LASTEXITCODE -ne 0) { throw "MSBuild failed with exit code $LASTEXITCODE." }
       shell: powershell
 
