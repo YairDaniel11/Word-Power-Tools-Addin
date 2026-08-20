@@ -32,10 +32,11 @@ jobs:
         }
 
         $vsToolsPath = $targetsFile.Directory.Parent.FullName
-        $referenceAssembliesPath = Join-Path $installPath "Common7\IDE\ReferenceAssemblies\v4.0"
-        if (-not (Test-Path (Join-Path $referenceAssembliesPath "Microsoft.Office.Tools.Word.v4.0.Utilities.dll"))) {
-          throw "VSTO reference assemblies were not found at $referenceAssembliesPath."
+        $referenceAssembly = Get-ChildItem $installPath -Filter "Microsoft.Office.Tools.Word.v4.0.Utilities.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $referenceAssembly) {
+          throw "Microsoft.Office.Tools.Word.v4.0.Utilities.dll was not found under $installPath."
         }
+        $referenceAssembliesPath = $referenceAssembly.Directory.FullName
 
         "VSTO_TOOLS_PATH=$vsToolsPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
         "VSTO_REFERENCE_ASSEMBLIES_PATH=$referenceAssembliesPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
@@ -53,9 +54,17 @@ jobs:
     - name: Build VSTO Project
       run: |
         $ErrorActionPreference = "Stop"
-        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:minimal
+        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:normal "/flp:LogFile=msbuild.log;Verbosity=diagnostic"
         if ($LASTEXITCODE -ne 0) { throw "MSBuild failed with exit code $LASTEXITCODE." }
       shell: powershell
+
+    - name: Upload build log on failure
+      if: failure()
+      uses: actions/upload-artifact@v4
+      with:
+        name: msbuild-log
+        path: msbuild.log
+        if-no-files-found: ignore
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
