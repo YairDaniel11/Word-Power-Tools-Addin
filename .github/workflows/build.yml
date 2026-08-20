@@ -32,11 +32,7 @@ jobs:
             "--installPath"
             $installPath
             "--add"
-            "Microsoft.VisualStudio.Component.TeamOffice.BuildTools"
-            "--add"
-            "Microsoft.VisualStudio.Component.TeamOffice"
-            "--add"
-            "Microsoft.VisualStudio.Workload.OfficeBuildTools"
+            "Microsoft.VisualStudio.Workload.Office"
             "--includeRecommended"
             "--quiet"
             "--norestart"
