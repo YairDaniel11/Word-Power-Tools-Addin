@@ -52,8 +52,7 @@ jobs:
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      # הסרתי את אילוץ הגרסה הישן כדי ש-MSBuild יעבוד תמיד עם הגרסה העדכנית ביותר שבשרת
-      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU"
+      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
