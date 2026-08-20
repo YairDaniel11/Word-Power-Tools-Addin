@@ -76,10 +76,16 @@ jobs:
         $ErrorActionPreference = "Stop"
         msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion="$env:VS_VERSION" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /p:ReferencePath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:normal "/flp:LogFile=msbuild.log;Verbosity=diagnostic"
         if ($LASTEXITCODE -ne 0) {
-          $errors = Select-String -Path msbuild.log -Pattern 'error|MSB[0-9]+|CS[0-9]+' | Select-Object -First 20
-          foreach ($error in $errors) {
-            Write-Host "::error file=WordPowerToolsAddin/WordPowerToolsAddin.csproj::$($error.Line.Trim())"
+          Write-Host "===== MSBUILD ERRORS ====="
+          $errors = Get-Content msbuild.log | Where-Object { $_ -match '(?i)error|MSB[0-9]+|CS[0-9]+' }
+          if (-not $errors) {
+            $errors = Get-Content msbuild.log | Select-Object -Last 80
           }
+          foreach ($errorLine in ($errors | Select-Object -First 80)) {
+            Write-Host $errorLine
+            Write-Host "::error file=WordPowerToolsAddin/WordPowerToolsAddin.csproj::$($errorLine.Trim())"
+          }
+          Write-Host "===== END MSBUILD ERRORS ====="
           throw "MSBuild failed with exit code $LASTEXITCODE."
         }
       shell: powershell
