@@ -20,11 +20,17 @@ jobs:
     - name: Setup NuGet
       uses: nuget/setup-nuget@v2
 
+    - name: Install Office Development Workload
+      # מתקין את רכיבי VSTO החסרים על שרת ה-Runner לפני הקימפול
+      run: |
+        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify --installPath `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise`" --add Microsoft.VisualStudio.Workload.Office --quiet --norestart" -Wait -NoNewWindow
+      shell: powershell
+
     - name: Restore NuGet Packages
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      # הוספנו כאן את הגדרת הגרסה הקשיחה ל-17.0 כדי לפתור את בעיית הנתיבים של VSTO
+      # מקמפל את הפרויקט עם גרסת MSBuild מותאמת
       run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0
 
     - name: Publish Artifacts
