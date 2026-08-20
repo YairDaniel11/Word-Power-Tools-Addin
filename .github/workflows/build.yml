@@ -50,14 +50,26 @@ jobs:
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      # שולף את הנתיב המדויק ומעביר אותו אקטיבית ל-MSBuild כדי למנוע את שגיאת MSB4226
       run: |
         $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
         $vsPath = & $vswhere -latest -property installationPath
-        $vsToolsPath = "$vsPath\MSBuild\Microsoft\VisualStudio\v17.0"
         
-        Write-Host "Forcing VSToolsPath to: $vsToolsPath"
-        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0 /p:VSToolsPath="$vsToolsPath"
+        Write-Host "Dynamically searching for Office.targets file..."
+        $targetsFile = Get-ChildItem -Path "$vsPath\MSBuild\Microsoft\VisualStudio" -Filter "Microsoft.VisualStudio.Tools.Office.targets" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        
+        if (-not $targetsFile) {
+            Write-Error "Office.targets file not found even after workload installation!"
+            exit 1
+        }
+        
+        # חילוץ נתיב האב והגרסה המדויקים מתוך מיקום הקובץ שנמצא
+        $vsToolsPath = $targetsFile.Directory.Parent.FullName
+        $vsVersion = $targetsFile.Directory.Parent.Name.Replace('v', '')
+        
+        Write-Host "Dynamically forced VSToolsPath to: $vsToolsPath"
+        Write-Host "Dynamically forced VisualStudioVersion to: $vsVersion"
+        
+        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=$vsVersion /p:VSToolsPath="$vsToolsPath"
       shell: powershell
 
     - name: Publish Artifacts
