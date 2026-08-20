@@ -34,6 +34,8 @@ jobs:
             "--add"
             "Microsoft.VisualStudio.Component.TeamOffice.BuildTools"
             "--add"
+            "Microsoft.VisualStudio.Component.TeamOffice"
+            "--add"
             "Microsoft.VisualStudio.Workload.OfficeBuildTools"
             "--includeRecommended"
             "--quiet"
