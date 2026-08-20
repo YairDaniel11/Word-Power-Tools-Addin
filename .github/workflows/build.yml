@@ -31,10 +31,8 @@ jobs:
         $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
         $arguments = "modify --installPath `"$installPath`" --add Microsoft.VisualStudio.Workload.Office --quiet --norestart"
         
-        # הרצת ההתקנה באופן שקט והמתנה לסיום
         $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow -PassThru
         
-        # קודי יציאה: 0 = הצלחה, 3010 = הצלחה (נדרשת הפעלה מחדש, אך לא רלוונטי לשרת זמני)
         if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) { 
             Write-Error "Installer failed with exit code $($process.ExitCode)"
             exit 1 
@@ -52,7 +50,15 @@ jobs:
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0
+      # שולף את הנתיב המדויק ומעביר אותו אקטיבית ל-MSBuild כדי למנוע את שגיאת MSB4226
+      run: |
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $vsPath = & $vswhere -latest -property installationPath
+        $vsToolsPath = "$vsPath\MSBuild\Microsoft\VisualStudio\v17.0"
+        
+        Write-Host "Forcing VSToolsPath to: $vsToolsPath"
+        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0 /p:VSToolsPath="$vsToolsPath"
+      shell: powershell
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
