@@ -10,36 +10,35 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: write 
+      contents: write
 
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Install Office Development Workload
+    - name: Locate Visual Studio and VSTO targets
       run: |
-        Write-Host "Locating Visual Studio installation..."
+        $ErrorActionPreference = "Stop"
         $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $installPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.CoreEditor -property installationPath
-        
-        if (-not $installPath) { 
-            Write-Error "Visual Studio not found on the GitHub runner."
-            exit 1 
+        $installPath = (& $vswhere -latest -products * -property installationPath | Select-Object -First 1).Trim()
+
+        if (-not $installPath) {
+          throw "Visual Studio not found on the GitHub runner."
         }
-        
-        Write-Host "Found VS at: $installPath"
-        Write-Host "Installing VSTO Workload (this may take 2-4 minutes)..."
-        
-        $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
-        $arguments = "modify --installPath `"$installPath`" --add Microsoft.VisualStudio.Workload.Office --quiet --norestart"
-        
-        $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow -PassThru
-        
-        if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) { 
-            Write-Error "Installer failed with exit code $($process.ExitCode)"
-            exit 1 
+
+        $targetsFile = Get-ChildItem "$installPath\MSBuild\Microsoft\VisualStudio" -Filter "Microsoft.VisualStudio.Tools.Office.targets" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
+        if (-not $targetsFile) {
+          throw "VSTO build targets are not installed in $installPath. Install the Visual Studio Office/SharePoint development tools on the runner image."
         }
-        Write-Host "VSTO Workload installed successfully!"
+
+        $vsToolsPath = $targetsFile.Directory.Parent.FullName
+        $referenceAssembliesPath = Join-Path $installPath "Common7\IDE\ReferenceAssemblies\v4.0"
+        if (-not (Test-Path (Join-Path $referenceAssembliesPath "Microsoft.Office.Tools.Word.v4.0.Utilities.dll"))) {
+          throw "VSTO reference assemblies were not found at $referenceAssembliesPath."
+      }
+
+        "VSTO_TOOLS_PATH=$vsToolsPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
+        "VSTO_REFERENCE_ASSEMBLIES_PATH=$referenceAssembliesPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
       shell: powershell
 
     - name: Setup MSBuild
@@ -53,24 +52,9 @@ jobs:
 
     - name: Build VSTO Project
       run: |
-        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $vsPath = & $vswhere -latest -property installationPath
-        
-        Write-Host "Dynamically searching for Office.targets file..."
-        $targetsFile = Get-ChildItem -Path "$vsPath\MSBuild\Microsoft\VisualStudio" -Filter "Microsoft.VisualStudio.Tools.Office.targets" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-        
-        if (-not $targetsFile) {
-            Write-Error "Office.targets file not found even after workload installation!"
-            exit 1
-        }
-        
-        $vsToolsPath = $targetsFile.Directory.Parent.FullName
-        $vsVersion = $targetsFile.Directory.Parent.Name.Replace('v', '')
-        
-        Write-Host "Dynamically forced VSToolsPath to: $vsToolsPath"
-        Write-Host "Dynamically forced VisualStudioVersion to: $vsVersion"
-        
-        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=$vsVersion /p:VSToolsPath="$vsToolsPath"
+        $ErrorActionPreference = "Stop"
+        msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /t:Rebuild /p:Configuration=Release /p:Platform="AnyCPU" /p:VSToolsPath="$env:VSTO_TOOLS_PATH" /p:VSTOReferenceAssembliesPath="$env:VSTO_REFERENCE_ASSEMBLIES_PATH" /v:minimal
+        if ($LASTEXITCODE -ne 0) { throw "MSBuild failed with exit code $LASTEXITCODE." }
       shell: powershell
 
     - name: Publish Artifacts
