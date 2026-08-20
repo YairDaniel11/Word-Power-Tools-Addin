@@ -31,8 +31,10 @@ jobs:
           throw "VSTO build targets are not installed in $installPath. Install the Visual Studio Office/SharePoint development tools on the runner image."
         }
 
-        $vsToolsPath = $targetsFile.Directory.Parent.FullName
-        $vsVersion = $targetsFile.Directory.Parent.Name -replace '^v', ''
+        $officeToolsPath = $targetsFile.Directory.FullName
+        $vsToolsPath = Split-Path $officeToolsPath -Parent
+        $vsVersionDirectory = Split-Path $vsToolsPath -Leaf
+        $vsVersion = $vsVersionDirectory -replace '^v', '' -replace '\.0$', ''
         Write-Host "VSTO targets: $($targetsFile.FullName)"
         Write-Host "Visual Studio version: $vsVersion"
         $referenceAssembly = Get-ChildItem $installPath -Filter "Microsoft.Office.Tools.Word.v4.0.Utilities.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
