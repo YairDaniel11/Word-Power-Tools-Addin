@@ -17,13 +17,13 @@ namespace WordPowerToolsAddin
             get { return _ThisAddIn; }
             set { if (_ThisAddIn == null) _ThisAddIn = value; }
         }
-        internal static global::Microsoft.Office.Tools.Word.Factory Factory { get; set; }
+        internal static global::Microsoft.Office.Tools.Factory Factory { get; set; }
     }
 
     // 2. הוספת הירושה המפורשת מ-AddInBase וקוד האתחול של VSTO
-    public partial class ThisAddIn : global::Microsoft.Office.Tools.Word.AddInBase
+    public partial class ThisAddIn : global::Microsoft.Office.Tools.AddInBase
     {
-        public ThisAddIn(global::Microsoft.Office.Tools.Word.Factory factory, global::System.IServiceProvider serviceProvider) : 
+        public ThisAddIn(global::Microsoft.Office.Tools.Factory factory, global::System.IServiceProvider serviceProvider) : 
                 base(factory, serviceProvider, "AddIn", "ThisAddIn")
         {
             Globals.Factory = factory;
