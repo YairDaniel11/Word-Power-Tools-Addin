@@ -7,7 +7,7 @@ using System.Windows.Forms;
 using Office = Microsoft.Office.Core;
 using Word = Microsoft.Office.Interop.Word;
 using OpenXmlPowerTools;
-using DocumentFormat.OpenXml.Packaging; // הוספנו את התלות הזו עבור חילוץ הטקסט
+using DocumentFormat.OpenXml.Packaging;
 
 namespace WordPowerToolsAddin
 {
@@ -46,7 +46,6 @@ namespace WordPowerToolsAddin
                     }
                     catch (Exception ex)
                     {
-                        Logger.LogError(ex, "OnMergeClicked");
                         MessageBox.Show($"שגיאה במיזוג: {ex.Message}");
                     }
                 }
@@ -88,7 +87,6 @@ namespace WordPowerToolsAddin
             try
             {
                 string plainText = "";
-                // שימוש יציב וסטנדרטי ב-OpenXML במקום המחלקה החסרה
                 using (WordprocessingDocument wordDoc = WordprocessingDocument.Open(tempDoc, false))
                 {
                     plainText = wordDoc.MainDocumentPart.Document.Body.InnerText;
@@ -100,7 +98,6 @@ namespace WordPowerToolsAddin
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "OnExtractTextClicked");
                 MessageBox.Show($"שגיאה בחילוץ טקסט: {ex.Message}");
             }
         }
@@ -135,7 +132,6 @@ namespace WordPowerToolsAddin
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "ProcessActiveDocument");
                 MessageBox.Show($"אירעה שגיאה בעיבוד: {ex.Message}");
             }
         }
