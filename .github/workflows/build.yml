@@ -24,7 +24,8 @@ jobs:
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU"
+      # הוספנו כאן את הגדרת הגרסה הקשיחה ל-17.0 כדי לפתור את בעיית הנתיבים של VSTO
+      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
