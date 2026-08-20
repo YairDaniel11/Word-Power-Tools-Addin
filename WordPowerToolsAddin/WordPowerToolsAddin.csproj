@@ -82,6 +82,7 @@
   <ItemGroup>
     <Compile Include="PowerRibbon.cs" />
     <Compile Include="ThisAddIn.cs" />
+    <Compile Include="Logger.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
