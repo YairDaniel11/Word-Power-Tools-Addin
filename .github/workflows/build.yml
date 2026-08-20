@@ -14,24 +14,46 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
+    - name: Install Office Development Workload
+      run: |
+        Write-Host "Locating Visual Studio installation..."
+        $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+        $installPath = & $vswhere -latest -products * -requires Microsoft.VisualStudio.Component.CoreEditor -property installationPath
+        
+        if (-not $installPath) { 
+            Write-Error "Visual Studio not found on the GitHub runner."
+            exit 1 
+        }
+        
+        Write-Host "Found VS at: $installPath"
+        Write-Host "Installing VSTO Workload (this may take 2-4 minutes)..."
+        
+        $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
+        $arguments = "modify --installPath `"$installPath`" --add Microsoft.VisualStudio.Workload.Office --quiet --norestart"
+        
+        # הרצת ההתקנה באופן שקט והמתנה לסיום
+        $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow -PassThru
+        
+        # קודי יציאה: 0 = הצלחה, 3010 = הצלחה (נדרשת הפעלה מחדש, אך לא רלוונטי לשרת זמני)
+        if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) { 
+            Write-Error "Installer failed with exit code $($process.ExitCode)"
+            exit 1 
+        }
+        Write-Host "VSTO Workload installed successfully!"
+      shell: powershell
+
     - name: Setup MSBuild
       uses: microsoft/setup-msbuild@v2
 
     - name: Setup NuGet
       uses: nuget/setup-nuget@v2
 
-    - name: Install Office Development Workload
-      # מתקין את רכיבי VSTO החסרים על שרת ה-Runner לפני הקימפול
-      run: |
-        Start-Process -FilePath "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vs_installer.exe" -ArgumentList "modify --installPath `"C:\Program Files\Microsoft Visual Studio\2022\Enterprise`" --add Microsoft.VisualStudio.Workload.Office --quiet --norestart" -Wait -NoNewWindow
-      shell: powershell
-
     - name: Restore NuGet Packages
       run: nuget restore WordPowerToolsAddin.sln
 
     - name: Build VSTO Project
-      # מקמפל את הפרויקט עם גרסת MSBuild מותאמת
-      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU" /p:VisualStudioVersion=17.0
+      # הסרתי את אילוץ הגרסה הישן כדי ש-MSBuild יעבוד תמיד עם הגרסה העדכנית ביותר שבשרת
+      run: msbuild WordPowerToolsAddin\WordPowerToolsAddin.csproj /p:Configuration=Release /p:Platform="AnyCPU"
 
     - name: Publish Artifacts
       uses: actions/upload-artifact@v4
