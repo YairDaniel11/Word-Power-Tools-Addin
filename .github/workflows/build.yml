@@ -34,7 +34,7 @@ jobs:
         $officeToolsPath = $targetsFile.Directory.FullName
         $vsToolsPath = Split-Path $officeToolsPath -Parent
         $vsVersionDirectory = Split-Path $vsToolsPath -Leaf
-        $vsVersion = $vsVersionDirectory -replace '^v', '' -replace '\.0$', ''
+        $vsVersion = $vsVersionDirectory -replace '^v', ''
         Write-Host "VSTO targets: $($targetsFile.FullName)"
         Write-Host "Visual Studio version: $vsVersion"
         $referenceAssembly = Get-ChildItem $installPath -Filter "Microsoft.Office.Tools.Word.v4.0.Utilities.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
