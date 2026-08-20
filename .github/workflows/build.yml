@@ -32,7 +32,9 @@ jobs:
         }
 
         $vsToolsPath = $targetsFile.Directory.Parent.FullName
-        $vsVersion = $targetsFile.Directory.Parent.Name.TrimStart('v')
+        $vsVersion = $targetsFile.Directory.Parent.Name -replace '^v', ''
+        Write-Host "VSTO targets: $($targetsFile.FullName)"
+        Write-Host "Visual Studio version: $vsVersion"
         $referenceAssembly = Get-ChildItem $installPath -Filter "Microsoft.Office.Tools.Word.v4.0.Utilities.dll" -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
         if (-not $referenceAssembly) {
           throw "Microsoft.Office.Tools.Word.v4.0.Utilities.dll was not found under $installPath."
