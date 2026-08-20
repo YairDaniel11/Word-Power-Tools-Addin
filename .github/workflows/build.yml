@@ -16,36 +16,17 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v4
 
-    - name: Install VSTO build component
+    - name: Verify VSTO build component
       shell: powershell
       run: |
         $ErrorActionPreference = "Stop"
         $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
-        $installer = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vs_installer.exe"
         $installPath = (& $vswhere -latest -products * -property installationPath | Select-Object -First 1).Trim()
         $runtimeName = "Microsoft.VisualStudio.Tools.Office.Runtime.dll"
         $runtime = Get-ChildItem $installPath -Filter $runtimeName -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
 
         if (-not $runtime) {
-          $arguments = @(
-            "modify"
-            "--installPath"
-            $installPath
-            "--add"
-            "Microsoft.VisualStudio.Workload.Office"
-            "--includeRecommended"
-            "--quiet"
-            "--norestart"
-          )
-          $process = Start-Process -FilePath $installer -ArgumentList $arguments -Wait -NoNewWindow -PassThru
-          if ($process.ExitCode -ne 0 -and $process.ExitCode -ne 3010) {
-            throw "VSTO component installation failed with exit code $($process.ExitCode)."
-          }
-        }
-
-        $runtime = Get-ChildItem $installPath -Filter $runtimeName -Recurse -ErrorAction SilentlyContinue | Select-Object -First 1
-        if (-not $runtime) {
-          throw "$runtimeName was not found after VSTO component installation."
+          throw "$runtimeName was not found under $installPath. GitHub-hosted windows-latest runners ship Microsoft.VisualStudio.Workload.Office preinstalled, so a missing runtime usually means the image changed - pin to a known image (e.g. windows-2022) instead of trying to install the workload in CI."
         }
         Write-Host "VSTO runtime: $($runtime.FullName)"
 
