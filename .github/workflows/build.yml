@@ -35,7 +35,7 @@ jobs:
         $referenceAssembliesPath = Join-Path $installPath "Common7\IDE\ReferenceAssemblies\v4.0"
         if (-not (Test-Path (Join-Path $referenceAssembliesPath "Microsoft.Office.Tools.Word.v4.0.Utilities.dll"))) {
           throw "VSTO reference assemblies were not found at $referenceAssembliesPath."
-      }
+        }
 
         "VSTO_TOOLS_PATH=$vsToolsPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
         "VSTO_REFERENCE_ASSEMBLIES_PATH=$referenceAssembliesPath" | Out-File $env:GITHUB_ENV -Encoding utf8 -Append
